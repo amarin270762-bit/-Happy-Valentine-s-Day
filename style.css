@@ -1,6 +1,7 @@
 :root {
     --primary: #ff758c;
     --secondary: #ff7eb3;
+    --bg-color: #fce4ec;
     --text-color: #d81b60;
     --envelope-color: #ff4d6d;
     --paper-color: #fff0f5;
@@ -17,34 +18,31 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* พื้นหลังไล่สีชมพูสวยๆ */
     background: linear-gradient(135deg, #fff0f3 0%, #ffc1e3 100%);
     font-family: 'Mali', cursive;
-    overflow: hidden;
+    overflow: hidden; /* ห้ามเลื่อนหน้าจอ */
 }
 
-/* ตั้งค่า Canvas ให้เต็มจอ */
+/* ตั้งค่า Canvas ให้เต็มจอเป็น Background */
 canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0; /* อยู่หลังสุด */
-    /* เพิ่มความเบลอนิดหน่อยให้พื้นหลังดูนุ่มนวล (ถ้าไม่ชอบลบบรรทัดนี้ออกได้) */
-    filter: blur(1px); 
+    z-index: 0;
 }
 
 .container {
     position: relative;
-    z-index: 10; /* อยู่หน้าสุด */
+    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     perspective: 1000px;
 }
 
-/* --- Styles ของเดิมด้านล่างนี้ไม่ต้องแก้ --- */
+/* --- ส่วนของซองจดหมาย --- */
 .envelope-wrapper {
     background: transparent;
     width: 300px;
@@ -67,16 +65,18 @@ canvas {
     z-index: 3;
 }
 
+/* ฝาปิดซอง */
 .envelope .flap {
     border-left: 150px solid transparent;
     border-right: 150px solid transparent;
-    border-top: 110px solid var(--primary);
+    border-top: 110px solid var(--primary); /* สีฝาซอง */
     top: 0;
     left: 0;
     transform-origin: top;
     transition: transform 0.6s ease 0.4s, z-index 0.2s;
 }
 
+/* ตัวกระเป๋าซอง */
 .envelope .pocket {
     border-left: 150px solid var(--secondary);
     border-right: 150px solid var(--secondary);
@@ -86,6 +86,7 @@ canvas {
     z-index: 3;
 }
 
+/* ตัวกระดาษจดหมายข้างใน */
 .letter {
     position: absolute;
     background: var(--paper-color);
@@ -95,7 +96,7 @@ canvas {
     left: 5%;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    z-index: 1;
+    z-index: 1; /* อยู่หลังซอง */
     transition: transform 0.8s ease 1s, z-index 0.2s;
     display: flex;
     flex-direction: column;
@@ -111,7 +112,7 @@ canvas {
     color: var(--text-color);
     font-size: 1.8rem;
     margin-bottom: 10px;
-    opacity: 0;
+    opacity: 0; /* ซ่อนก่อน */
     transform: translateY(20px);
     transition: opacity 0.5s ease 1.8s, transform 0.5s ease 1.8s;
 }
@@ -131,15 +132,16 @@ canvas {
     transition: opacity 0.5s ease 2s;
 }
 
+/* --- State เมื่อเปิดซอง --- */
 .envelope-wrapper.open .flap {
     transform: rotateX(180deg);
     z-index: 0;
 }
 
 .envelope-wrapper.open .letter {
-    transform: translateY(-120px);
-    z-index: 4;
-    height: 350px;
+    transform: translateY(-120px); /* ดึงกระดาษขึ้น */
+    z-index: 4; /* มาอยู่หน้าสุด */
+    height: 350px; /* ยืดกระดาษให้ยาวขึ้นเพื่อใส่ข้อความ */
 }
 
 .envelope-wrapper.open .header-text,
@@ -148,6 +150,7 @@ canvas {
     transform: translateY(0);
 }
 
+/* --- ปุ่มกด --- */
 .actions {
     margin-top: 60px;
     text-align: center;
@@ -187,6 +190,7 @@ canvas {
     display: none;
 }
 
+/* --- Keyframes --- */
 @keyframes heartbeat {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); }
@@ -199,6 +203,7 @@ canvas {
     100% { box-shadow: 0 0 0 0 rgba(216, 27, 96, 0); }
 }
 
+/* Responsive มือถือ */
 @media (max-width: 600px) {
     .envelope-wrapper {
         transform: scale(0.8);
