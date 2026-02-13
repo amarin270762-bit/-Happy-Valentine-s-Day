@@ -1,9 +1,6 @@
 :root {
     --primary: #ff758c;
     --secondary: #ff7eb3;
-    /* ปรับสีพื้นหลังให้โปร่งใสขึ้นเล็กน้อยเพื่อให้เห็นรูป */
-    --bg-gradient-start: rgba(255, 240, 243, 0.6);
-    --bg-gradient-end: rgba(255, 193, 227, 0.6);
     --text-color: #d81b60;
     --envelope-color: #ff4d6d;
     --paper-color: #fff0f5;
@@ -20,62 +17,22 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* สีพื้นฐานเผื่อรูปโหลดไม่ทัน */
-    background: var(--bg-gradient-end); 
+    /* พื้นหลังไล่สีชมพูสวยๆ */
+    background: linear-gradient(135deg, #fff0f3 0%, #ffc1e3 100%);
     font-family: 'Mali', cursive;
     overflow: hidden;
 }
 
-/* === ส่วนจัดการพื้นหลังรูปภาพ === */
-.photo-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -2; /* อยู่หลังสุด */
-}
-
-/* สร้าง Layer สีชมพูทับรูปภาพเพื่อคุมโทนและให้อ่านตัวหนังสือได้ */
-.photo-background::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* สีชมพูโปร่งแสงทับหน้า */
-    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-    z-index: -1;
-}
-
-.slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    opacity: 0; /* ซ่อนก่อน */
-    transition: opacity 2s ease-in-out; /* เฟดช้าๆ 2 วินาที */
-    z-index: -3;
-}
-
-.slide.active {
-    opacity: 1; /* แสดงรูปที่ active */
-}
-/* ================================= */
-
-
+/* ตั้งค่า Canvas ให้เต็มจอ */
 canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* อยู่หน้ารูปภาพ แต่อยู่หลังซองจดหมาย */
-    pointer-events: none; /* เพื่อให้คลิกทะลุไปโดนปุ่มได้ */
+    z-index: 0; /* อยู่หลังสุด */
+    /* เพิ่มความเบลอนิดหน่อยให้พื้นหลังดูนุ่มนวล (ถ้าไม่ชอบลบบรรทัดนี้ออกได้) */
+    filter: blur(1px); 
 }
 
 .container {
