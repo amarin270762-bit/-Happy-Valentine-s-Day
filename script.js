@@ -1,6 +1,12 @@
 // --- ส่วนตั้งค่าข้อความ ---
 // แก้ไขข้อความที่จะบอกรักตรงนี้ได้เลย (ใช้ \n เพื่อขึ้นบรรทัดใหม่)
 const loveMessage = "ขอบคุณที่เข้ามาเป็นเรื่องราวดีๆ\nในชีวิตของพี่นะ\nขอให้ทุกวันเป็นวันที่สดใส\nรักหนูที่สุดเลย 💖\nHappy Valentine's day";
+const userPhotoFiles = [
+    'photo1.jpg',
+    'photo2.jpg', 
+    'photo3.jpg',
+    // 'my_cute_photo.png', 
+];
 const speed = 50; // ความเร็วในการพิมพ์ (มิลลิวินาที)
 
 const envelope = document.getElementById('envelope');
@@ -9,29 +15,6 @@ const resetBtn = document.getElementById('resetBtn');
 const typewriterElement = document.getElementById('typewriter');
 let i = 0;
 let isOpened = false;
-
-// ==========================================
-// --- ส่วนควบคุม Slideshow รูปภาพพื้นหลัง ---
-// ==========================================
-const slides = document.querySelectorAll('.slide');
-let currentSlide = 0;
-const slideInterval = 5000; // เปลี่ยนรูปทุกๆ 5 วินาที (5000ms)
-
-function nextSlide() {
-    // เอารูปปัจจุบันออก
-    slides[currentSlide].classList.remove('active');
-    // คำนวณรูปถัดไป (ถ้าถึงรูปสุดท้ายให้วนกลับมารูปแรก)
-    currentSlide = (currentSlide + 1) % slides.length;
-    // แสดงรูปถัดไป
-    slides[currentSlide].classList.add('active');
-}
-
-// เริ่มต้นการทำงานของ Slideshow ถ้ามีรูปภาพมากกว่า 1 รูป
-if (slides.length > 1) {
-    setInterval(nextSlide, slideInterval);
-}
-// ==========================================
-
 
 openBtn.addEventListener('click', () => {
     if (!isOpened) {
@@ -66,10 +49,43 @@ function typeWriter() {
     }
 }
 
-// --- Canvas Floating Hearts (เหมือนเดิม) ---
-const canvas = document.getElementById('heartCanvas');
+// ==========================================
+// --- ส่วนของ Canvas Background (หัวใจ + รูปภาพ) ---
+// ==========================================
+const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
-let width, height, hearts = [];
+let width, height;
+let floatingElements = []; // เก็บทั้งหัวใจและรูปภาพรวมกัน
+
+// โหลดรูปภาพทั้งหมดให้เสร็จก่อนเริ่มอนิเมชั่น
+let loadedImages = [];
+let imagesLoadedCount = 0;
+
+function preloadImages(callback) {
+    if (userPhotoFiles.length === 0) {
+        callback();
+        return;
+    }
+    userPhotoFiles.forEach((file) => {
+        const img = new Image();
+        img.src = file;
+        img.onload = () => {
+            imagesLoadedCount++;
+            loadedImages.push(img);
+            // ถ้าโหลดครบทุกรูปแล้ว ให้เรียกฟังก์ชัน callback (เพื่อเริ่ม init)
+            if (imagesLoadedCount === userPhotoFiles.length) {
+                callback();
+            }
+        };
+        // กรณีโหลดรูปไม่ผ่าน ก็ให้นับว่าโหลดแล้ว เพื่อไม่ให้โปรแกรมค้าง
+        img.onerror = () => {
+             console.error("Cannot load image:", file);
+             imagesLoadedCount++;
+             if (imagesLoadedCount === userPhotoFiles.length) callback();
+        }
+    });
+}
+
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -78,11 +94,13 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
+// --- Class สำหรับหัวใจ (เหมือนเดิม) ---
 class Heart {
     constructor() {
         this.x = Math.random() * width;
         this.y = height + Math.random() * 100;
         this.velocity = { x: (Math.random() - 0.5) * 1, y: Math.random() * -2 - 1 };
+        // ขนาดหัวใจ (สูงสุดประมาณ 20)
         this.size = Math.random() * 15 + 5;
         this.opacity = Math.random() * 0.5 + 0.3;
         this.color = `rgba(255, ${Math.floor(Math.random() * 50) + 100}, ${Math.floor(Math.random() * 100) + 150}, ${this.opacity})`;
@@ -111,14 +129,85 @@ class Heart {
     }
 }
 
-function init() {
-    hearts = [];
-    for (let i = 0; i < 50; i++) hearts.push(new Heart());
+// --- Class สำหรับรูปภาพลอย (ของใหม่!) ---
+class FloatingPhoto {
+    constructor() {
+        this.x = Math.random() * width;
+        this.y = height + Math.random() * 200; // เริ่มต้นต่ำกว่าหัวใจหน่อย
+        this.velocity = { x: (Math.random() - 0.5) * 0.8, y: Math.random() * -1.5 - 0.5 }; // ลอยช้ากว่าหัวใจนิดนึง
+        // ขนาดรูปภาพ: ใหญ่กว่าหัวใจประมาณ 2 เท่า (40px - 70px)
+        this.size = Math.random() * 30 + 40; 
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.5; // หมุนช้าๆ
+        this.opacity = Math.random() * 0.3 + 0.5; // โปร่งแสงนิดๆ
+        // สุ่มเลือกรูปจากที่โหลดไว้
+        this.img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+    }
+    draw() {
+        if (!this.img) return; // ป้องกัน error ถ้ารูปไม่มี
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.globalAlpha = this.opacity; // ตั้งค่าความโปร่งแสง
+        // วาดรูปโดยให้จุดศูนย์กลางอยู่ที่ x,y (ต้องลบออกครึ่งนึงของขนาด)
+        // และใส่ border radius ให้รูปดูกลมมน (ใช้ clip)
+        ctx.beginPath();
+        // สร้างกรอบวงกลม/สี่เหลี่ยมมนรอบรูป
+        ctx.roundRect(-this.size/2, -this.size/2, this.size, this.size, 10);
+        ctx.clip(); 
+        // วาดรูป
+        ctx.drawImage(this.img, -this.size/2, -this.size/2, this.size, this.size);
+        
+        // เพิ่มขอบสีขาวบางๆ ให้รูปดูเด่นขึ้น (optional)
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
+
+        ctx.restore();
+    }
+    update() {
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+        this.rotation += this.rotationSpeed;
+        // ถ้ารูปหลุดจอไปข้างบน ให้วนกลับมาข้างล่างใหม่
+        if (this.y < -100) { 
+            this.y = height + 100; 
+            this.x = Math.random() * width;
+            // สุ่มรูปใหม่ตอนวนกลับมา
+            this.img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+        }
+    }
 }
+
+function init() {
+    floatingElements = [];
+    // สร้างหัวใจ 40 ดวง
+    for (let i = 0; i < 40; i++) {
+        floatingElements.push(new Heart());
+    }
+    // สร้างรูปภาพลอย 15 รูป (ถ้ามีรูปให้โหลด)
+    if (loadedImages.length > 0) {
+        for (let i = 0; i < 15; i++) {
+            floatingElements.push(new FloatingPhoto());
+        }
+    }
+}
+
 function animate() {
     requestAnimationFrame(animate);
-    ctx.clearRect(0, 0, width, height);
-    hearts.forEach(heart => { heart.draw(); heart.update(); });
+    // เคลียร์ canvas และวาดพื้นหลังสีชมพูอ่อนทับจางๆ ทุกเฟรมเพื่อให้ดูนวลๆ
+    ctx.fillStyle = 'rgba(255, 240, 245, 0.4)'; 
+    ctx.fillRect(0, 0, width, height);
+    
+    // วาดองค์ประกอบทั้งหมด
+    floatingElements.forEach(el => {
+        el.draw();
+        el.update();
+    });
 }
-init();
-animate();
+
+// เริ่มต้น: โหลดรูปให้เสร็จก่อน แล้วค่อย init และ animate
+preloadImages(() => {
+    init();
+    animate();
+});
